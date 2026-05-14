@@ -1,0 +1,46 @@
+stages:
+  - validation
+  - plan
+  - deploy
+
+variables:
+  TF_VAR_environnement: $CI_ENVIRONMENT_NAME
+
+# Étape 1 : Scan de sécurité Checkov — bloque si règles critiques violées
+scan-securite:
+  stage: validation
+  image: bridgecrew/checkov:latest
+  script:
+    - checkov -d . --framework terraform
+        --check CKV_AWS_19    # Chiffrement S3
+        --check CKV_AWS_24    # SSH non ouvert au public
+        --check CKV2_AWS_11   # VPC Flow Logs activés
+        --check CKV_AWS_86    # Accès public S3 bloqué
+        --check CKV_AWS_36    # CloudTrail log file validation
+  allow_failure: false
+
+# Étape 2 : Terraform plan — prévisualise les changements
+terraform-plan:
+  stage: plan
+  image: hashicorp/terraform:1.6
+  script:
+    - terraform init
+    - terraform plan -var="account_id=$AWS_ACCOUNT_ID" -out=tfplan
+  artifacts:
+    paths:
+      - tfplan
+  only:
+    - merge_requests
+    - main
+
+# Étape 3 : Déploiement — uniquement sur la branche main
+terraform-deploy:
+  stage: deploy
+  image: hashicorp/terraform:1.6
+  script:
+    - terraform init
+    - terraform apply -var="account_id=$AWS_ACCOUNT_ID" -auto-approve
+  only:
+    - main
+  environment:
+    name: production
