@@ -1,0 +1,26 @@
+# Dossier des providers Terraform (très lourd, régénéré par terraform init)
+.terraform/
+
+# Fichiers d'état Terraform (contiennent des données sensibles)
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Plan Terraform
+tfplan
+*.tfplan
+
+# Variables avec données sensibles
+*.tfvars
+*.tfvars.json
+
+# Logs
+crash.log
+crash.*.log
+
+# Fichiers système Windows
+Thumbs.db
+Desktop.ini
+
+# Fichiers système Mac
+.DS_Store
